@@ -12,7 +12,9 @@ namespace web_api.Controllers
     [ApiController]
     public class UsersController : ControllerBase
     {
-        string Filepath = "Data.txt";
+        //fix: The path never changes, so it can be readonly.
+        //In C#, fields are written in camelCase (filePath)
+        readonly string Filepath = "Data.txt";
         // GET: api/<UsersController>
         [HttpGet]
         public IEnumerable<string> Get()
@@ -22,6 +24,8 @@ namespace web_api.Controllers
 
         // GET api/<UsersController>/5
         [HttpGet("{id}")]
+        //When the user is not found, this returns the text "User not found" with status 200.
+        //Return NotFound() (or NoContent()) instead, and Ok(user) when found: change string to ActionResult<User>
         public string Get(int id)
         {
             using (StreamReader reader = System.IO.File.OpenText(Filepath))
@@ -62,7 +66,9 @@ namespace web_api.Controllers
         }
 
         //POST api/<Users>/login
+        //The assignment asks a wrong login to return NoContent() (204)
         [HttpPost("login")]
+        //A full class name is clearer than Userin (for example LoginUser), and in C# parameters are written in camelCase (loginUser)
         public IActionResult Login([FromBody] Userin Userin)
         {
             using (StreamReader reader = System.IO.File.OpenText(Filepath))
@@ -121,12 +127,18 @@ namespace web_api.Controllers
                     User userInFile = JsonSerializer.Deserialize<User>(currentUserInFile);
 
                     if (userInFile.Id == id) 
+                    {
                         textToReplace = currentUserInFile; 
+                        //fix: Found- break
+                        break;
+                    }
                 } 
             } 
  
             if (textToReplace != string.Empty) 
             { 
+                //fix: Keep the id, otherwise the updated user is saved without it
+                user.Id = id;
                 string text = System.IO.File.ReadAllText(Filepath); 
                 text = text.Replace(textToReplace, JsonSerializer.Serialize(user));
 
